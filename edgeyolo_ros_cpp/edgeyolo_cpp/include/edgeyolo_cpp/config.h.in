@@ -1,0 +1,9 @@
+#ifndef _EdgeYOLO_CPP_CONFIG_H_
+#define _EdgeYOLO_CPP_CONFIG_H_
+
+#cmakedefine ENABLE_OPENVINO
+#cmakedefine ENABLE_TENSORRT
+#cmakedefine ENABLE_ONNXRUNTIME
+#cmakedefine ENABLE_TFLITE
+
+#endif // _EdgeYOLO_CPP_CONFIG_H_
