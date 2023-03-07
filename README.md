@@ -25,3 +25,8 @@ colcon build --symlink-install --packages-up-to edgeyolo_ros_cpp
 ```bash
 ros2 launch edgeyolo_ros_cpp edgeyolo_onnxruntime.launch.py model_path:=edgeyolo_tiny_coco_416x416.onnx
 ```
+
+## Reference
+- [EdgeYOLO](https://github.com/LSH9832/edgeyolo)
+- [YOLOX-ROS](https://github.com/Ar-Ray-code/YOLOX-ROS)
+- [PINTO_model_zoo](https://github.com/PINTO0309/PINTO_model_zoo)
