@@ -4,9 +4,9 @@ namespace edgeyolo_cpp
 {
 
     EdgeYOLOTflite::EdgeYOLOTflite(file_name_t path_to_model, int num_threads,
-                             float nms_th, float conf_th, std::string model_version,
-                             int num_classes, bool p6, bool is_nchw)
-        : AbcEdgeYOLO(nms_th, conf_th, model_version, num_classes, p6), is_nchw_(is_nchw)
+                             float nms_th, float conf_th,
+                             int num_classes, bool is_nchw)
+        : AbcEdgeYOLO(nms_th, conf_th, num_classes), is_nchw_(is_nchw)
     {
         TfLiteStatus status;
         this->model_ = tflite::FlatBufferModel::BuildFromFile(path_to_model.c_str());
@@ -128,15 +128,6 @@ namespace edgeyolo_cpp
             std::cout << " tensor_type: " << tensor->type << std::endl;
         }
 
-        // Prepare GridAndStrides
-        if(this->p6_)
-        {
-            generate_grids_and_stride(this->input_w_, this->input_h_, this->strides_p6_, this->grid_strides_);
-        }
-        else
-        {
-            generate_grids_and_stride(this->input_w_, this->input_h_, this->strides_, this->grid_strides_);
-        }
     }
     EdgeYOLOTflite::~EdgeYOLOTflite()
     {

@@ -21,11 +21,6 @@ def generate_launch_description():
             description="edgeyolo model path."
         ),
         DeclareLaunchArgument(
-            "p6",
-            default_value="false",
-            description="with p6."
-        ),
-        DeclareLaunchArgument(
             "class_labels_path",
             default_value="''",
             description="if use custom model, set class name labels. "
@@ -39,11 +34,6 @@ def generate_launch_description():
             "tensorrt/device",
             default_value="0",
             description="GPU index. Set in string type. ex '0'"
-        ),
-        DeclareLaunchArgument(
-            "model_version",
-            default_value="0.1.1rc0",
-            description="edgeyolo model version."
         ),
         DeclareLaunchArgument(
             "conf",
@@ -97,11 +87,9 @@ def generate_launch_description():
                         name='edgeyolo_ros_cpp',
                         parameters=[{
                             "model_path": LaunchConfiguration("model_path"),
-                            "p6": LaunchConfiguration("p6"),
                             "class_labels_path": LaunchConfiguration("class_labels_path"),
                             "num_classes": LaunchConfiguration("num_classes"),
                             "model_type": "tensorrt",
-                            "model_version": LaunchConfiguration("model_version"),
                             "tensorrt/device": LaunchConfiguration("tensorrt/device"),
                             "conf": LaunchConfiguration("conf"),
                             "nms": LaunchConfiguration("nms"),

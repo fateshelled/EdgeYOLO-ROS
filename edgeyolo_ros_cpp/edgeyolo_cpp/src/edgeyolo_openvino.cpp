@@ -4,9 +4,9 @@ namespace edgeyolo_cpp{
     using namespace InferenceEngine;
 
     EdgeYOLOOpenVINO::EdgeYOLOOpenVINO(file_name_t path_to_model, std::string device_name,
-                                 float nms_th, float conf_th, std::string model_version,
-                                 int num_classes, bool p6)
-    :AbcEdgeYOLO(nms_th, conf_th, model_version, num_classes, p6),
+                                 float nms_th, float conf_th,
+                                 int num_classes)
+    :AbcEdgeYOLO(nms_th, conf_th, num_classes),
      device_name_(device_name)
     {
         // Step 1. Initialize inference engine core
@@ -60,15 +60,6 @@ namespace edgeyolo_cpp{
         std::cout << "Create an infer request" << std::endl;
         infer_request_ = executable_network_.CreateInferRequest();
 
-        // Prepare GridAndStrides
-        if(this->p6_)
-        {
-            generate_grids_and_stride(this->input_w_, this->input_h_, this->strides_p6_, this->grid_strides_);
-        }
-        else
-        {
-            generate_grids_and_stride(this->input_w_, this->input_h_, this->strides_, this->grid_strides_);
-        }
     }
 
     std::vector<Object> EdgeYOLOOpenVINO::inference(const cv::Mat& frame)

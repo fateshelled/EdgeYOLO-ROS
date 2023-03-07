@@ -20,11 +20,6 @@ def generate_launch_description():
             description="edgeyolo model path."
         ),
         DeclareLaunchArgument(
-            "p6",
-            default_value="false",
-            description="with p6."
-        ),
-        DeclareLaunchArgument(
             "is_nchw",
             default_value="true",
             description="model input shape is NCHW or NWHC."
@@ -38,11 +33,6 @@ def generate_launch_description():
             "num_classes",
             default_value="1",
             description="num classes."
-        ),
-        DeclareLaunchArgument(
-            "model_version",
-            default_value="0.1.1rc0",
-            description="edgeyolo model version."
         ),
         DeclareLaunchArgument(
             "tflite/num_threads",
@@ -100,12 +90,10 @@ def generate_launch_description():
                         name='edgeyolo_ros_cpp',
                         parameters=[{
                             "model_path": LaunchConfiguration("model_path"),
-                            "p6": LaunchConfiguration("p6"),
                             "class_labels_path": LaunchConfiguration("class_labels_path"),
                             "num_classes": LaunchConfiguration("num_classes"),
                             "is_nchw": LaunchConfiguration("is_nchw"),
                             "model_type": "tflite",
-                            "model_version": LaunchConfiguration("model_version"),
                             "tflite/num_threads": LaunchConfiguration("tflite/num_threads"),
                             "conf": LaunchConfiguration("conf"),
                             "nms": LaunchConfiguration("nms"),

@@ -29,10 +29,9 @@ namespace edgeyolo_cpp{
         public:
             AbcEdgeYOLO(){}
             AbcEdgeYOLO(float nms_th=0.45, float conf_th=0.3,
-                     std::string model_version="0.1.1rc0",
-                     int num_classes=80, bool p6=false)
+                     int num_classes=80)
             :nms_thresh_(nms_th), bbox_conf_thresh_(conf_th),
-             model_version_(model_version), num_classes_(num_classes), p6_(p6)
+             num_classes_(num_classes)
             {
             }
             virtual std::vector<Object> inference(const cv::Mat& frame) = 0;
@@ -43,13 +42,8 @@ namespace edgeyolo_cpp{
             float bbox_conf_thresh_;
             int num_classes_;
             int num_array_;
-            bool p6_;
-            std::string model_version_;
             const std::vector<float> mean_ = {0.485, 0.456, 0.406};
-            const std::vector<float> std_ = {0.229, 0.224, 0.225};
-            const std::vector<int> strides_ = {8, 16, 32};
-            const std::vector<int> strides_p6_ = {8, 16, 32, 64};
-            std::vector<GridAndStride> grid_strides_;
+            const std::vector<float> std_ = {0.229, 0.224, 0.225};\
 
             cv::Mat static_resize(const cv::Mat& img)
             {
@@ -70,27 +64,13 @@ namespace edgeyolo_cpp{
                 size_t channels = 3;
                 size_t img_h = img.rows;
                 size_t img_w = img.cols;
-                if(this->model_version_=="0.1.0"){
-                    for (size_t c = 0; c < channels; ++c)
+                for (size_t c = 0; c < channels; ++c)
+                {
+                    for (size_t  h = 0; h < img_h; ++h)
                     {
-                        for (size_t  h = 0; h < img_h; ++h)
+                        for (size_t w = 0; w < img_w; ++w)
                         {
-                            for (size_t w = 0; w < img_w; ++w)
-                            {
-                                blob_data[c * img_w * img_h + h * img_w + w] =
-                                    ((float)img.ptr<cv::Vec3b>(h)[w][c]/ 255.0 - this->mean_[c]) / this->std_[c];
-                            }
-                        }
-                    }
-                }else{
-                    for (size_t c = 0; c < channels; ++c)
-                    {
-                        for (size_t  h = 0; h < img_h; ++h)
-                        {
-                            for (size_t w = 0; w < img_w; ++w)
-                            {
-                                blob_data[c * img_w * img_h + h * img_w + w] = (float)img.ptr<cv::Vec3b>(h)[w][c]; // 0.1.1rc0 or later
-                            }
+                            blob_data[c * img_w * img_h + h * img_w + w] = (float)img.ptr<cv::Vec3b>(h)[w][c];
                         }
                     }
                 }
@@ -102,38 +82,11 @@ namespace edgeyolo_cpp{
                 size_t channels = 3;
                 size_t img_h = img.rows;
                 size_t img_w = img.cols;
-                if(this->model_version_=="0.1.0"){
-                    for (size_t i = 0; i < img_h * img_w; ++i)
-                    {
-                        for (size_t c = 0; c < channels; ++c)
-                        {
-                            blob_data[i * channels + c] =
-                                ((float)img.data[i * channels + c] / 255.0 - this->mean_[c]) / this->std_[c];
-                        }
-                    }
-                }else{
-                    for (size_t i = 0; i < img_h * img_w; ++i)
-                    {
-                        for (size_t c = 0; c < channels; ++c)
-                        {
-                            blob_data[i * channels + c] = (float)img.data[i * channels + c]; // 0.1.1rc0 or later
-                        }
-                    }
-                }
-            }
-
-            void generate_grids_and_stride(const int target_w, const int target_h, const std::vector<int>& strides, std::vector<GridAndStride>& grid_strides)
-            {
-                for (auto stride : strides)
+                for (size_t i = 0; i < img_h * img_w; ++i)
                 {
-                    int num_grid_w = target_w / stride;
-                    int num_grid_h = target_h / stride;
-                    for (int g1 = 0; g1 < num_grid_h; ++g1)
+                    for (size_t c = 0; c < channels; ++c)
                     {
-                        for (int g0 = 0; g0 < num_grid_w; ++g0)
-                        {
-                            grid_strides.push_back((GridAndStride){g0, g1, stride});
-                        }
+                        blob_data[i * channels + c] = (float)img.data[i * channels + c];
                     }
                 }
             }
@@ -141,13 +94,9 @@ namespace edgeyolo_cpp{
             void generate_edgeyolo_proposals(const int num_array, const float* feat_ptr, const float prob_threshold, std::vector<Object>& objects)
             {
 
-                for (int anchor_idx = 0; anchor_idx < num_array; ++anchor_idx)
+                for (int idx = 0; idx < num_array; ++idx)
                 {
-                    // const int grid0 = grid_strides[anchor_idx].grid0;
-                    // const int grid1 = grid_strides[anchor_idx].grid1;
-                    // const int stride = grid_strides[anchor_idx].stride;
-
-                    const int basic_pos = anchor_idx * (num_classes_ + 5);
+                    const int basic_pos = idx * (num_classes_ + 5);
 
                     float box_objectness = feat_ptr[basic_pos + 4];
                     int class_id = 0;
@@ -156,26 +105,27 @@ namespace edgeyolo_cpp{
                     {
                         float box_cls_score = feat_ptr[basic_pos + 5 + class_idx];
                         float box_prob = box_objectness * box_cls_score;
+                        if(std::isnan(box_prob)){
+                            continue;
+                        }
                         if (box_prob > max_class_score){
                             class_id = class_idx;
                             max_class_score = box_prob;
                         }
                     }
-                    if (max_class_score > prob_threshold)
+                    if (1.0 >= max_class_score && max_class_score > prob_threshold)
                     {
-                        // edgeyolo/models/yolo_head.py decode logic
-                        //  outputs[..., :2] = (outputs[..., :2] + grids) * strides
-                        //  outputs[..., 2:4] = torch.exp(outputs[..., 2:4]) * strides
-                        // float x_center = (feat_ptr[basic_pos + 0] + grid0) * stride;
-                        // float y_center = (feat_ptr[basic_pos + 1] + grid1) * stride;
-                        // float w = exp(feat_ptr[basic_pos + 2]) * stride;
-                        // float h = exp(feat_ptr[basic_pos + 3]) * stride;
                         float x_center = feat_ptr[basic_pos + 0];
                         float y_center = feat_ptr[basic_pos + 1];
                         float w = feat_ptr[basic_pos + 2];
                         float h = feat_ptr[basic_pos + 3];
                         float x0 = x_center - w * 0.5f;
                         float y0 = y_center - h * 0.5f;
+
+                        if(std::isnan(w) || std::isnan(h) || std::isnan(x0) || std::isnan(y0) || w < 0.001 || h < 0.001)
+                        {
+                            continue;
+                        }
 
                         Object obj;
                         obj.rect.x = x0;
@@ -186,7 +136,7 @@ namespace edgeyolo_cpp{
                         obj.prob = max_class_score;
                         objects.push_back(obj);
                     }
-                } // point anchor loop
+                }
             }
 
             float intersection_area(const Object& a, const Object& b)
@@ -278,17 +228,22 @@ namespace edgeyolo_cpp{
                 nms_sorted_bboxes(proposals, picked, nms_thresh_);
 
                 int count = picked.size();
-                objects.resize(count);
+                objects.clear();
 
                 for (int i = 0; i < count; ++i)
                 {
-                    objects[i] = proposals[picked[i]];
-
                     // adjust offset to original unpadded
-                    float x0 = (objects[i].rect.x) / scale;
-                    float y0 = (objects[i].rect.y) / scale;
-                    float x1 = (objects[i].rect.x + objects[i].rect.width) / scale;
-                    float y1 = (objects[i].rect.y + objects[i].rect.height) / scale;
+                    float x0 = (proposals[picked[i]].rect.x) / scale;
+                    float y0 = (proposals[picked[i]].rect.y) / scale;
+                    float x1 = (proposals[picked[i]].rect.x + proposals[picked[i]].rect.width) / scale;
+                    float y1 = (proposals[picked[i]].rect.y + proposals[picked[i]].rect.height) / scale;
+
+                    float w = x1 - x0;
+                    float h = y1 - y0;
+                    if(std::isnan(w) || std::isnan(h) || w < 1.0 || h < 1.0 || x0 < 0.0 || y0 < 0.0)
+                    {
+                        continue;
+                    }
 
                     // clip
                     x0 = std::max(std::min(x0, (float)(img_w - 1)), 0.f);
@@ -296,10 +251,12 @@ namespace edgeyolo_cpp{
                     x1 = std::max(std::min(x1, (float)(img_w - 1)), 0.f);
                     y1 = std::max(std::min(y1, (float)(img_h - 1)), 0.f);
 
-                    objects[i].rect.x = x0;
-                    objects[i].rect.y = y0;
-                    objects[i].rect.width = x1 - x0;
-                    objects[i].rect.height = y1 - y0;
+                    proposals[picked[i]].rect.x = x0;
+                    proposals[picked[i]].rect.y = y0;
+                    proposals[picked[i]].rect.width = w;
+                    proposals[picked[i]].rect.height = h;
+
+                    objects.push_back(proposals[picked[i]]);
                 }
             }
     };

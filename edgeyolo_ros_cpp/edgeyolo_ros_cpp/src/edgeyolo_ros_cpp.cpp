@@ -34,8 +34,8 @@ namespace edgeyolo_ros_cpp{
             #ifdef ENABLE_TENSORRT
                 RCLCPP_INFO(this->get_logger(), "Model Type is TensorRT");
                 this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOTensorRT>(this->model_path_, this->tensorrt_device_,
-                                                                          this->nms_th_, this->conf_th_, this->model_version_,
-                                                                          this->num_classes_, this->p6_);
+                                                                          this->nms_th_, this->conf_th_,
+                                                                          this->num_classes_);
             #else
                 RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with TensorRT");
                 rclcpp::shutdown();
@@ -44,8 +44,8 @@ namespace edgeyolo_ros_cpp{
             #ifdef ENABLE_OPENVINO
                 RCLCPP_INFO(this->get_logger(), "Model Type is OpenVINO");
                 this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOOpenVINO>(this->model_path_, this->openvino_device_,
-                                                                          this->nms_th_, this->conf_th_, this->model_version_,
-                                                                          this->num_classes_, this->p6_);
+                                                                          this->nms_th_, this->conf_th_,
+                                                                          this->num_classes_);
             #else
                 RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with OpenVINO");
                 rclcpp::shutdown();
@@ -58,8 +58,8 @@ namespace edgeyolo_ros_cpp{
                                                                              this->onnxruntime_inter_op_num_threads_,
                                                                              this->onnxruntime_use_cuda_, this->onnxruntime_device_id_,
                                                                              this->onnxruntime_use_parallel_,
-                                                                             this->nms_th_, this->conf_th_, this->model_version_,
-                                                                             this->num_classes_, this->p6_);
+                                                                             this->nms_th_, this->conf_th_,
+                                                                             this->num_classes_);
             #else
                 RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with ONNXRuntime");
                 rclcpp::shutdown();
@@ -68,8 +68,8 @@ namespace edgeyolo_ros_cpp{
             #ifdef ENABLE_TFLITE
                 RCLCPP_INFO(this->get_logger(), "Model Type is tflite");
                 this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOTflite>(this->model_path_, this->tflite_num_threads_,
-                                                                        this->nms_th_, this->conf_th_, this->model_version_,
-                                                                        this->num_classes_, this->p6_, this->is_nchw_);
+                                                                        this->nms_th_, this->conf_th_,
+                                                                        this->num_classes_, this->is_nchw_);
             #else
                 RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with tflite");
                 rclcpp::shutdown();
@@ -95,7 +95,6 @@ namespace edgeyolo_ros_cpp{
         this->model_path_                       = this->declare_parameter<std::string>("model_path", "./install/edgeyolo_ros_cpp/share/edgeyolo_ros_cpp/weights/tflite/model.tflite");
         this->num_classes_                      = this->declare_parameter<int>("num_classes", 1);
         this->is_nchw_                          = this->declare_parameter<bool>("is_nchw", true);
-        this->p6_                               = this->declare_parameter<bool>("p6", false);
         this->class_labels_path_                = this->declare_parameter<std::string>("class_labels_path", "");
         this->conf_th_                          = this->declare_parameter<float>("conf", 0.3f);
         this->nms_th_                           = this->declare_parameter<float>("nms", 0.45f);
@@ -108,7 +107,6 @@ namespace edgeyolo_ros_cpp{
         this->onnxruntime_intra_op_num_threads_ = this->declare_parameter<int>("onnxruntime/intra_op_num_threads", 1);
         this->tflite_num_threads_               = this->declare_parameter<int>("tflite/num_threads", 1);
         this->model_type_                       = this->declare_parameter<std::string>("model_type", "tflite");
-        this->model_version_                    = this->declare_parameter<std::string>("model_version", "0.1.1rc0");
         this->src_image_topic_name_             = this->declare_parameter<std::string>("src_image_topic_name", "image_raw");
         this->publish_image_topic_name_         = this->declare_parameter<std::string>("publish_image_topic_name", "edgeyolo/image_raw");
         this->publish_boundingbox_topic_name_   = this->declare_parameter<std::string>("publish_boundingbox_topic_name", "edgeyolo/bounding_boxes");
@@ -118,7 +116,6 @@ namespace edgeyolo_ros_cpp{
         RCLCPP_INFO(this->get_logger(), "Set parameter class_labels_path: '%s'", this->class_labels_path_.c_str());
         RCLCPP_INFO(this->get_logger(), "Set parameter num_classes: %i", this->num_classes_);
         RCLCPP_INFO(this->get_logger(), "Set parameter is_nchw: %i", this->is_nchw_);
-        RCLCPP_INFO(this->get_logger(), "Set parameter p6: %i", this->p6_);
         RCLCPP_INFO(this->get_logger(), "Set parameter conf: %f", this->conf_th_);
         RCLCPP_INFO(this->get_logger(), "Set parameter nms: %f", this->nms_th_);
         RCLCPP_INFO(this->get_logger(), "Set parameter tensorrt/device: %i", this->tensorrt_device_);
@@ -130,7 +127,6 @@ namespace edgeyolo_ros_cpp{
         RCLCPP_INFO(this->get_logger(), "Set parameter onnxruntime/intra_op_num_threads: %i", this->onnxruntime_intra_op_num_threads_);
         RCLCPP_INFO(this->get_logger(), "Set parameter tflite/num_threads: %i", this->tflite_num_threads_);
         RCLCPP_INFO(this->get_logger(), "Set parameter model_type: '%s'", this->model_type_.c_str());
-        RCLCPP_INFO(this->get_logger(), "Set parameter model_version: '%s'", this->model_version_.c_str());
         RCLCPP_INFO(this->get_logger(), "Set parameter src_image_topic_name: '%s'", this->src_image_topic_name_.c_str());
         RCLCPP_INFO(this->get_logger(), "Set parameter publish_image_topic_name: '%s'", this->publish_image_topic_name_.c_str());
 
@@ -148,6 +144,7 @@ namespace edgeyolo_ros_cpp{
         auto end = std::chrono::system_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - now);
         RCLCPP_INFO(this->get_logger(), "Inference: %f FPS", 1000.0f / elapsed.count());
+        RCLCPP_INFO(this->get_logger(), "OBJECTS: %ld", objects.size());
 
         edgeyolo_cpp::utils::draw_objects(frame, objects, this->class_names_);
         if(this->imshow_){

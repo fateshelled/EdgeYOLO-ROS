@@ -5,9 +5,9 @@ namespace edgeyolo_cpp{
     EdgeYOLOONNXRuntime::EdgeYOLOONNXRuntime(file_name_t path_to_model,
                                        int intra_op_num_threads, int inter_op_num_threads,
                                        bool use_cuda, int device_id, bool use_parallel,
-                                       float nms_th, float conf_th, std::string model_version,
-                                       int num_classes, bool p6)
-    :AbcEdgeYOLO(nms_th, conf_th, model_version, num_classes, p6),
+                                       float nms_th, float conf_th,
+                                       int num_classes)
+    :AbcEdgeYOLO(nms_th, conf_th, num_classes),
      intra_op_num_threads_(intra_op_num_threads), inter_op_num_threads_(inter_op_num_threads),
      use_cuda_(use_cuda), device_id_(device_id), use_parallel_(use_parallel)
     {
@@ -108,15 +108,6 @@ namespace edgeyolo_cpp{
                                                         output_tensor_type);
         this->output_buffer_.emplace_back(std::move(output_buffer));
 
-        // Prepare GridAndStrides
-        if(this->p6_)
-        {
-            generate_grids_and_stride(this->input_w_, this->input_h_, this->strides_p6_, this->grid_strides_);
-        }
-        else
-        {
-            generate_grids_and_stride(this->input_w_, this->input_h_, this->strides_, this->grid_strides_);
-        }
     }
 
     std::vector<Object> EdgeYOLOONNXRuntime::inference(const cv::Mat& frame)

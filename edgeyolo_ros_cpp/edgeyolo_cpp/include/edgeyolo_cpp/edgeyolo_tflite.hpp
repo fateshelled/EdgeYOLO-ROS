@@ -31,8 +31,8 @@ namespace edgeyolo_cpp{
     class EdgeYOLOTflite: public AbcEdgeYOLO{
         public:
             EdgeYOLOTflite(file_name_t path_to_model, int num_threads,
-                        float nms_th=0.45, float conf_th=0.3, std::string model_version="0.1.1rc0",
-                        int num_classes=80, bool p6=false, bool is_nchw=true);
+                        float nms_th=0.45, float conf_th=0.3,
+                        int num_classes=80, bool is_nchw=true);
             ~EdgeYOLOTflite();
             std::vector<Object> inference(const cv::Mat& frame) override;
 

@@ -29,7 +29,6 @@ namespace edgeyolo_ros_cpp{
         std::unique_ptr<edgeyolo_cpp::AbcEdgeYOLO> edgeyolo_;
         std::string model_path_;
         std::string model_type_;
-        std::string model_version_;
         int tensorrt_device_;
         std::string openvino_device_;
         bool onnxruntime_use_cuda_;
@@ -42,7 +41,6 @@ namespace edgeyolo_ros_cpp{
         float nms_th_;
         int num_classes_;
         bool is_nchw_;
-        bool p6_;
         std::vector<std::string> class_names_;
         std::string class_labels_path_;
 
