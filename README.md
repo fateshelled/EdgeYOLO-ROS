@@ -1,6 +1,6 @@
 # EdgeYOLO-ROS
 
-[EdgeYOLO](https://github.com/LSH9832/edgeyolo) + ROS2 Inference DEMO
+[EdgeYOLO](https://github.com/LSH9832/edgeyolo) + ROS2 C++ Inference DEMO
 
 ## Supported List
 - ONNXRuntime C++
