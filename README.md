@@ -57,7 +57,7 @@ trtexec --onnx=edgeyolo_tiny_coco_416x416.onnx \
 
 # Run
 ros2 launch edgeyolo_ros_cpp edgeyolo_onnxruntime.launch.py \
-      model_path:=edgeyolo_tiny_coco_416x416.onnx
+      model_path:=edgeyolo_tiny_coco_416x416.engine
 ```
 
 ## Reference
