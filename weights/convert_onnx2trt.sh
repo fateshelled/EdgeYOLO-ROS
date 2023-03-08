@@ -30,6 +30,6 @@ fi
 
 /usr/src/tensorrt/bin/trtexec \
     --onnx=$ONNX_MODEL_PATH \
-    --saveEngine=$SCRIPT_DIR/$BASENAME.trt \
+    --saveEngine=$SCRIPT_DIR/$BASENAME.engine \
     --verbose --workspace=$((1<<$TRT_WORKSPACE))
 
