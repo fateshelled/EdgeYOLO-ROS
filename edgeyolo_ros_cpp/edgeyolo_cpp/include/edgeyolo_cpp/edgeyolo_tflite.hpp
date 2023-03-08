@@ -21,32 +21,34 @@
 #include "core.hpp"
 #include "coco_names.hpp"
 
-namespace edgeyolo_cpp{
-    #define TFLITE_MINIMAL_CHECK(x)                              \
-    if (!(x)) {                                                  \
+namespace edgeyolo_cpp
+{
+#define TFLITE_MINIMAL_CHECK(x)                                  \
+    if (!(x))                                                    \
+    {                                                            \
         fprintf(stderr, "Error at %s:%d\n", __FILE__, __LINE__); \
         exit(1);                                                 \
     }
 
-    class EdgeYOLOTflite: public AbcEdgeYOLO{
-        public:
-            EdgeYOLOTflite(file_name_t path_to_model, int num_threads,
-                        float nms_th=0.45, float conf_th=0.3,
-                        int num_classes=80, bool is_nchw=true);
-            ~EdgeYOLOTflite();
-            std::vector<Object> inference(const cv::Mat& frame) override;
+    class EdgeYOLOTflite : public AbcEdgeYOLO
+    {
+    public:
+        EdgeYOLOTflite(file_name_t path_to_model, int num_threads,
+                       float nms_th = 0.45, float conf_th = 0.3,
+                       int num_classes = 80, bool is_nchw = true);
+        ~EdgeYOLOTflite();
+        std::vector<Object> inference(const cv::Mat &frame) override;
 
-        private:
-            int doInference(float* input, float* output);
+    private:
+        int doInference(float *input, float *output);
 
-            int input_size_;
-            int output_size_;
-            bool is_nchw_;
-            std::unique_ptr<tflite::FlatBufferModel> model_;
-            std::unique_ptr<tflite::ops::builtin::BuiltinOpResolver> resolver_;
-            std::unique_ptr<tflite::Interpreter> interpreter_;
-            TfLiteDelegate* delegate_;
-
+        int input_size_;
+        int output_size_;
+        bool is_nchw_;
+        std::unique_ptr<tflite::FlatBufferModel> model_;
+        std::unique_ptr<tflite::ops::builtin::BuiltinOpResolver> resolver_;
+        std::unique_ptr<tflite::Interpreter> interpreter_;
+        TfLiteDelegate *delegate_;
     };
 } // namespace edgeyolo_cpp
 

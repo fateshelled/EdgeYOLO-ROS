@@ -4,8 +4,8 @@ namespace edgeyolo_cpp
 {
 
     EdgeYOLOTflite::EdgeYOLOTflite(file_name_t path_to_model, int num_threads,
-                             float nms_th, float conf_th,
-                             int num_classes, bool is_nchw)
+                                   float nms_th, float conf_th,
+                                   int num_classes, bool is_nchw)
         : AbcEdgeYOLO(nms_th, conf_th, num_classes), is_nchw_(is_nchw)
     {
         TfLiteStatus status;
@@ -88,6 +88,7 @@ namespace edgeyolo_cpp
                 this->input_w_ = tensor->dims->data[2];
             }
 
+            this->num_array_ = 1;
             std::cout << " shape:" << std::endl;
             if (tensor->type == kTfLiteUInt8)
             {
@@ -100,11 +101,13 @@ namespace edgeyolo_cpp
             for (size_t i = 0; i < tensor->dims->size; i++)
             {
                 this->input_size_ *= tensor->dims->data[i];
+                this->num_array_ *= tensor->dims->data[i];
                 std::cout << "   - " << tensor->dims->data[i] << std::endl;
             }
             std::cout << " input_h: " << this->input_h_ << std::endl;
             std::cout << " input_w: " << this->input_w_ << std::endl;
             std::cout << " tensor_type: " << tensor->type << std::endl;
+            this->num_array_ /= (5 + this->num_classes_);
         }
 
         {
@@ -127,7 +130,6 @@ namespace edgeyolo_cpp
             }
             std::cout << " tensor_type: " << tensor->type << std::endl;
         }
-
     }
     EdgeYOLOTflite::~EdgeYOLOTflite()
     {

@@ -16,40 +16,40 @@
 #include "coco_names.hpp"
 #include "tensorrt_logging.h"
 
-namespace edgeyolo_cpp{
+namespace edgeyolo_cpp
+{
     using namespace nvinfer1;
 
-    #define CHECK(status) \
-        do\
-        {\
-            auto ret = (status);\
-            if (ret != 0)\
-            {\
-                std::cerr << "Cuda failure: " << ret << std::endl;\
-                abort();\
-            }\
-        } while (0)
+#define CHECK(status)                                          \
+    do                                                         \
+    {                                                          \
+        auto ret = (status);                                   \
+        if (ret != 0)                                          \
+        {                                                      \
+            std::cerr << "Cuda failure: " << ret << std::endl; \
+            abort();                                           \
+        }                                                      \
+    } while (0)
 
+    class EdgeYOLOTensorRT : public AbcEdgeYOLO
+    {
+    public:
+        EdgeYOLOTensorRT(file_name_t path_to_engine, int device = 0,
+                         float nms_th = 0.45, float conf_th = 0.3,
+                         int num_classes = 80);
+        std::vector<Object> inference(const cv::Mat &frame) override;
 
-    class EdgeYOLOTensorRT: public AbcEdgeYOLO{
-        public:
-            EdgeYOLOTensorRT(file_name_t path_to_engine, int device=0,
-                          float nms_th=0.45, float conf_th=0.3,
-                          int num_classes=80);
-            std::vector<Object> inference(const cv::Mat& frame) override;
+    private:
+        void doInference(float *input, float *output);
 
-        private:
-            void doInference(float* input, float* output);
-
-            int DEVICE_ = 0;
-            Logger gLogger_;
-            std::unique_ptr<IRuntime> runtime_;
-            std::unique_ptr<ICudaEngine> engine_;
-            std::unique_ptr<IExecutionContext> context_;
-            int output_size_;
-            const int inputIndex_ = 0;
-            const int outputIndex_ = 1;
-
+        int DEVICE_ = 0;
+        Logger gLogger_;
+        std::unique_ptr<IRuntime> runtime_;
+        std::unique_ptr<ICudaEngine> engine_;
+        std::unique_ptr<IExecutionContext> context_;
+        int output_size_;
+        const int inputIndex_ = 0;
+        const int outputIndex_ = 1;
     };
 } // namespace edgeyolo_cpp
 

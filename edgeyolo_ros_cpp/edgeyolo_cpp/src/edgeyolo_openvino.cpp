@@ -1,13 +1,14 @@
 #include "edgeyolo_cpp/edgeyolo_openvino.hpp"
 
-namespace edgeyolo_cpp{
+namespace edgeyolo_cpp
+{
     using namespace InferenceEngine;
 
     EdgeYOLOOpenVINO::EdgeYOLOOpenVINO(file_name_t path_to_model, std::string device_name,
-                                 float nms_th, float conf_th,
-                                 int num_classes)
-    :AbcEdgeYOLO(nms_th, conf_th, num_classes),
-     device_name_(device_name)
+                                       float nms_th, float conf_th,
+                                       int num_classes)
+        : AbcEdgeYOLO(nms_th, conf_th, num_classes),
+          device_name_(device_name)
     {
         // Step 1. Initialize inference engine core
         std::cout << "Initialize Inference engine core" << std::endl;
@@ -29,11 +30,11 @@ namespace edgeyolo_cpp{
         input_name_ = network_.getInputsInfo().begin()->first;
 
         /* Mark input as resizable by setting of a resize algorithm.
-        * In this case we will be able to set an input blob of any shape to an
-        * infer request. Resize and layout conversions are executed automatically
-        * during inference */
-        //input_info->getPreProcess().setResizeAlgorithm(RESIZE_BILINEAR);
-        //input_info->setLayout(Layout::NHWC);
+         * In this case we will be able to set an input blob of any shape to an
+         * infer request. Resize and layout conversions are executed automatically
+         * during inference */
+        // input_info->getPreProcess().setResizeAlgorithm(RESIZE_BILINEAR);
+        // input_info->setLayout(Layout::NHWC);
         input_info->setPrecision(Precision::FP32);
         auto input_dims = input_info->getInputData()->getDims();
         this->input_h_ = input_dims[2];
@@ -41,10 +42,17 @@ namespace edgeyolo_cpp{
         std::cout << "INPUT_HEIGHT: " << this->input_h_ << std::endl;
         std::cout << "INPUT_WIDTH: " << this->input_w_ << std::endl;
 
+        this->num_array_ = 1;
+        this->num_array_ *= input_dims[1];
+        this->num_array_ *= input_dims[2];
+        this->num_array_ *= input_dims[3];
+        this->num_array_ /= (5 + this->num_classes_);
+
         // Prepare output blobs
-        if (network_.getOutputsInfo().empty()) {
+        if (network_.getOutputsInfo().empty())
+        {
             std::cerr << "Network outputs info is empty" << std::endl;
-            throw std :: runtime_error( "Network outputs info is empty" );
+            throw std ::runtime_error("Network outputs info is empty");
         }
         DataPtr output_info = network_.getOutputsInfo().begin()->second;
         output_name_ = network_.getOutputsInfo().begin()->first;
@@ -59,10 +67,9 @@ namespace edgeyolo_cpp{
         //  Step 5. Create an infer request
         std::cout << "Create an infer request" << std::endl;
         infer_request_ = executable_network_.CreateInferRequest();
-
     }
 
-    std::vector<Object> EdgeYOLOOpenVINO::inference(const cv::Mat& frame)
+    std::vector<Object> EdgeYOLOOpenVINO::inference(const cv::Mat &frame)
     {
         // preprocess
         cv::Mat pr_img = static_resize(frame);
@@ -71,7 +78,7 @@ namespace edgeyolo_cpp{
         if (!mblob)
         {
             THROW_IE_EXCEPTION << "We expect blob to be inherited from MemoryBlob in matU8ToBlob, "
-                << "but by fact we were not able to cast inputBlob to MemoryBlob";
+                               << "but by fact we were not able to cast inputBlob to MemoryBlob";
         }
         // locked memory holder should be alive all time while access to its buffer happens
         auto mblobHolder = mblob->wmap();
@@ -85,17 +92,18 @@ namespace edgeyolo_cpp{
         // Process output
         const InferenceEngine::Blob::Ptr output_blob = infer_request_.GetBlob(output_name_);
         InferenceEngine::MemoryBlob::CPtr moutput = as<InferenceEngine::MemoryBlob>(output_blob);
-        if (!moutput) {
+        if (!moutput)
+        {
             throw std::logic_error("We expect output to be inherited from MemoryBlob, "
-                                "but by fact we were not able to cast output to MemoryBlob");
+                                   "but by fact we were not able to cast output to MemoryBlob");
         }
 
         // locked memory holder should be alive all time while access to its buffer
         // happens
         auto moutputHolder = moutput->rmap();
-        const float* net_pred = moutputHolder.as<const PrecisionTrait<Precision::FP32>::value_type*>();
+        const float *net_pred = moutputHolder.as<const PrecisionTrait<Precision::FP32>::value_type *>();
 
-        float scale = std::min(input_w_ / (frame.cols*1.0), input_h_ / (frame.rows*1.0));
+        float scale = std::min(input_w_ / (frame.cols * 1.0), input_h_ / (frame.rows * 1.0));
         std::vector<Object> objects;
         decode_outputs(net_pred, this->num_array_, objects, this->bbox_conf_thresh_, scale, frame.cols, frame.rows);
         return objects;

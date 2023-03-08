@@ -4,20 +4,19 @@
 #include "config.h"
 
 #ifdef ENABLE_OPENVINO
-    #include "edgeyolo_openvino.hpp"
+#include "edgeyolo_openvino.hpp"
 #endif
 
 #ifdef ENABLE_TENSORRT
-    #include "edgeyolo_tensorrt.hpp"
+#include "edgeyolo_tensorrt.hpp"
 #endif
 
 #ifdef ENABLE_ONNXRUNTIME
-    #include "edgeyolo_onnxruntime.hpp"
+#include "edgeyolo_onnxruntime.hpp"
 #endif
 
 #ifdef ENABLE_TFLITE
-    #include "edgeyolo_tflite.hpp"
+#include "edgeyolo_tflite.hpp"
 #endif
-
 
 #endif

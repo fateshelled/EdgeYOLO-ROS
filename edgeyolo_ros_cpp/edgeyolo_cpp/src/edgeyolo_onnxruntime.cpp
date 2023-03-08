@@ -1,22 +1,23 @@
 #include "edgeyolo_cpp/edgeyolo_onnxruntime.hpp"
 
-namespace edgeyolo_cpp{
+namespace edgeyolo_cpp
+{
 
     EdgeYOLOONNXRuntime::EdgeYOLOONNXRuntime(file_name_t path_to_model,
-                                       int intra_op_num_threads, int inter_op_num_threads,
-                                       bool use_cuda, int device_id, bool use_parallel,
-                                       float nms_th, float conf_th,
-                                       int num_classes)
-    :AbcEdgeYOLO(nms_th, conf_th, num_classes),
-     intra_op_num_threads_(intra_op_num_threads), inter_op_num_threads_(inter_op_num_threads),
-     use_cuda_(use_cuda), device_id_(device_id), use_parallel_(use_parallel)
+                                             int intra_op_num_threads, int inter_op_num_threads,
+                                             bool use_cuda, int device_id, bool use_parallel,
+                                             float nms_th, float conf_th,
+                                             int num_classes)
+        : AbcEdgeYOLO(nms_th, conf_th, num_classes),
+          intra_op_num_threads_(intra_op_num_threads), inter_op_num_threads_(inter_op_num_threads),
+          use_cuda_(use_cuda), device_id_(device_id), use_parallel_(use_parallel)
     {
         try
         {
             Ort::SessionOptions session_options;
 
             session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-            if(this->use_parallel_)
+            if (this->use_parallel_)
             {
                 session_options.SetExecutionMode(ExecutionMode::ORT_PARALLEL);
                 session_options.SetInterOpNumThreads(this->inter_op_num_threads_);
@@ -27,7 +28,7 @@ namespace edgeyolo_cpp{
             }
             session_options.SetIntraOpNumThreads(this->intra_op_num_threads_);
 
-            if(this->use_cuda_)
+            if (this->use_cuda_)
             {
                 OrtCUDAProviderOptions cuda_option;
                 cuda_option.device_id = this->device_id_;
@@ -54,7 +55,7 @@ namespace edgeyolo_cpp{
         auto input_info = this->session_.GetInputTypeInfo(0);
         auto input_shape_info = input_info.GetTensorTypeAndShapeInfo();
         std::vector<int64_t> input_shape = input_shape_info.GetShape();
-        ONNXTensorElementDataType  input_tensor_type = input_shape_info.GetElementType();
+        ONNXTensorElementDataType input_tensor_type = input_shape_info.GetElementType();
         this->input_h_ = input_shape[2];
         this->input_w_ = input_shape[3];
 
@@ -107,10 +108,9 @@ namespace edgeyolo_cpp{
                                                         output_shape.data(), output_shape.size(),
                                                         output_tensor_type);
         this->output_buffer_.emplace_back(std::move(output_buffer));
-
     }
 
-    std::vector<Object> EdgeYOLOONNXRuntime::inference(const cv::Mat& frame)
+    std::vector<Object> EdgeYOLOONNXRuntime::inference(const cv::Mat &frame)
     {
         // preprocess
         cv::Mat pr_img = static_resize(frame);
@@ -118,8 +118,8 @@ namespace edgeyolo_cpp{
         float *blob_data = (float *)(this->input_buffer_[0].get());
         blobFromImage(pr_img, blob_data);
 
-        const char* input_names_[] = {this->input_name_.c_str()};
-        const char* output_names_[] = {this->output_name_.c_str()};
+        const char *input_names_[] = {this->input_name_.c_str()};
+        const char *output_names_[] = {this->output_name_.c_str()};
 
         // Inference
         Ort::RunOptions run_options;
@@ -129,10 +129,10 @@ namespace edgeyolo_cpp{
                            output_names_,
                            &this->output_tensor_, 1);
 
-        float* net_pred = (float *)this->output_buffer_[0].get();
+        float *net_pred = (float *)this->output_buffer_[0].get();
 
         // post process
-        float scale = std::min(input_w_ / (frame.cols*1.0), input_h_ / (frame.rows*1.0));
+        float scale = std::min(input_w_ / (frame.cols * 1.0), input_h_ / (frame.rows * 1.0));
         std::vector<Object> objects;
         decode_outputs(net_pred, this->num_array_, objects, this->bbox_conf_thresh_, scale, frame.cols, frame.rows);
         return objects;

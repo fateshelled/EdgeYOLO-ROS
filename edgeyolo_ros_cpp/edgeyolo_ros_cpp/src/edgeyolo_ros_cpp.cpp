@@ -1,18 +1,21 @@
 #include "edgeyolo_ros_cpp/edgeyolo_ros_cpp.hpp"
 
-namespace edgeyolo_ros_cpp{
+namespace edgeyolo_ros_cpp
+{
 
-    EdgeYOLONode::EdgeYOLONode(const rclcpp::NodeOptions& options)
-    : EdgeYOLONode::EdgeYOLONode("", options)
-    {}
+    EdgeYOLONode::EdgeYOLONode(const rclcpp::NodeOptions &options)
+        : EdgeYOLONode::EdgeYOLONode("", options)
+    {
+    }
 
-    EdgeYOLONode::EdgeYOLONode(const std::string &node_name, const rclcpp::NodeOptions& options)
-    : rclcpp::Node("edgeyolo_ros_cpp", node_name, options)
+    EdgeYOLONode::EdgeYOLONode(const std::string &node_name, const rclcpp::NodeOptions &options)
+        : rclcpp::Node("edgeyolo_ros_cpp", node_name, options)
     {
         RCLCPP_INFO(this->get_logger(), "initialize");
         this->initializeParameter();
 
-        if(this->imshow_){
+        if (this->imshow_)
+        {
             char window_name[50];
             sprintf(window_name, "%s %s %s", this->WINDOW_NAME_.c_str(), "_", this->get_name());
             this->WINDOW_NAME_ = window_name;
@@ -20,7 +23,7 @@ namespace edgeyolo_ros_cpp{
             cv::namedWindow(this->WINDOW_NAME_, cv::WINDOW_AUTOSIZE);
         }
 
-        if(this->class_labels_path_!="")
+        if (this->class_labels_path_ != "")
         {
             RCLCPP_INFO(this->get_logger(), "read class labels from '%s'", this->class_labels_path_.c_str());
             this->class_names_ = edgeyolo_cpp::utils::read_class_labels_file(this->class_labels_path_);
@@ -30,50 +33,57 @@ namespace edgeyolo_ros_cpp{
             this->class_names_ = edgeyolo_cpp::COCO_CLASSES;
         }
 
-        if(this->model_type_ == "tensorrt"){
-            #ifdef ENABLE_TENSORRT
-                RCLCPP_INFO(this->get_logger(), "Model Type is TensorRT");
-                this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOTensorRT>(this->model_path_, this->tensorrt_device_,
-                                                                          this->nms_th_, this->conf_th_,
-                                                                          this->num_classes_);
-            #else
-                RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with TensorRT");
-                rclcpp::shutdown();
-            #endif
-        }else if(this->model_type_ == "openvino"){
-            #ifdef ENABLE_OPENVINO
-                RCLCPP_INFO(this->get_logger(), "Model Type is OpenVINO");
-                this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOOpenVINO>(this->model_path_, this->openvino_device_,
-                                                                          this->nms_th_, this->conf_th_,
-                                                                          this->num_classes_);
-            #else
-                RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with OpenVINO");
-                rclcpp::shutdown();
-            #endif
-        }else if(this->model_type_ == "onnxruntime"){
-            #ifdef ENABLE_ONNXRUNTIME
-                RCLCPP_INFO(this->get_logger(), "Model Type is ONNXRuntime");
-                this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOONNXRuntime>(this->model_path_,
-                                                                             this->onnxruntime_intra_op_num_threads_,
-                                                                             this->onnxruntime_inter_op_num_threads_,
-                                                                             this->onnxruntime_use_cuda_, this->onnxruntime_device_id_,
-                                                                             this->onnxruntime_use_parallel_,
+        if (this->model_type_ == "tensorrt")
+        {
+#ifdef ENABLE_TENSORRT
+            RCLCPP_INFO(this->get_logger(), "Model Type is TensorRT");
+            this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOTensorRT>(this->model_path_, this->tensorrt_device_,
+                                                                               this->nms_th_, this->conf_th_,
+                                                                               this->num_classes_);
+#else
+            RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with TensorRT");
+            rclcpp::shutdown();
+#endif
+        }
+        else if (this->model_type_ == "openvino")
+        {
+#ifdef ENABLE_OPENVINO
+            RCLCPP_INFO(this->get_logger(), "Model Type is OpenVINO");
+            this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOOpenVINO>(this->model_path_, this->openvino_device_,
+                                                                               this->nms_th_, this->conf_th_,
+                                                                               this->num_classes_);
+#else
+            RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with OpenVINO");
+            rclcpp::shutdown();
+#endif
+        }
+        else if (this->model_type_ == "onnxruntime")
+        {
+#ifdef ENABLE_ONNXRUNTIME
+            RCLCPP_INFO(this->get_logger(), "Model Type is ONNXRuntime");
+            this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOONNXRuntime>(this->model_path_,
+                                                                                  this->onnxruntime_intra_op_num_threads_,
+                                                                                  this->onnxruntime_inter_op_num_threads_,
+                                                                                  this->onnxruntime_use_cuda_, this->onnxruntime_device_id_,
+                                                                                  this->onnxruntime_use_parallel_,
+                                                                                  this->nms_th_, this->conf_th_,
+                                                                                  this->num_classes_);
+#else
+            RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with ONNXRuntime");
+            rclcpp::shutdown();
+#endif
+        }
+        else if (this->model_type_ == "tflite")
+        {
+#ifdef ENABLE_TFLITE
+            RCLCPP_INFO(this->get_logger(), "Model Type is tflite");
+            this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOTflite>(this->model_path_, this->tflite_num_threads_,
                                                                              this->nms_th_, this->conf_th_,
-                                                                             this->num_classes_);
-            #else
-                RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with ONNXRuntime");
-                rclcpp::shutdown();
-            #endif
-        }else if(this->model_type_ == "tflite"){
-            #ifdef ENABLE_TFLITE
-                RCLCPP_INFO(this->get_logger(), "Model Type is tflite");
-                this->edgeyolo_ = std::make_unique<edgeyolo_cpp::EdgeYOLOTflite>(this->model_path_, this->tflite_num_threads_,
-                                                                        this->nms_th_, this->conf_th_,
-                                                                        this->num_classes_, this->is_nchw_);
-            #else
-                RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with tflite");
-                rclcpp::shutdown();
-            #endif
+                                                                             this->num_classes_, this->is_nchw_);
+#else
+            RCLCPP_ERROR(this->get_logger(), "edgeyolo_cpp is not built with tflite");
+            rclcpp::shutdown();
+#endif
         }
         RCLCPP_INFO(this->get_logger(), "model loaded");
 
@@ -83,10 +93,8 @@ namespace edgeyolo_ros_cpp{
             "raw");
         this->pub_bboxes_ = this->create_publisher<bboxes_ex_msgs::msg::BoundingBoxes>(
             this->publish_boundingbox_topic_name_,
-            10
-        );
+            10);
         this->pub_image_ = image_transport::create_publisher(this, this->publish_image_topic_name_);
-
     }
 
     void EdgeYOLONode::initializeParameter()
@@ -129,9 +137,8 @@ namespace edgeyolo_ros_cpp{
         RCLCPP_INFO(this->get_logger(), "Set parameter model_type: '%s'", this->model_type_.c_str());
         RCLCPP_INFO(this->get_logger(), "Set parameter src_image_topic_name: '%s'", this->src_image_topic_name_.c_str());
         RCLCPP_INFO(this->get_logger(), "Set parameter publish_image_topic_name: '%s'", this->publish_image_topic_name_.c_str());
-
     }
-    void EdgeYOLONode::colorImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr& ptr)
+    void EdgeYOLONode::colorImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &ptr)
     {
         auto img = cv_bridge::toCvCopy(ptr, "bgr8");
         cv::Mat frame = img->image;
@@ -147,10 +154,12 @@ namespace edgeyolo_ros_cpp{
         RCLCPP_INFO(this->get_logger(), "OBJECTS: %ld", objects.size());
 
         edgeyolo_cpp::utils::draw_objects(frame, objects, this->class_names_);
-        if(this->imshow_){
+        if (this->imshow_)
+        {
             cv::imshow(this->WINDOW_NAME_, frame);
             auto key = cv::waitKey(1);
-            if(key == 27){
+            if (key == 27)
+            {
                 rclcpp::shutdown();
             }
         }
@@ -161,13 +170,13 @@ namespace edgeyolo_ros_cpp{
         sensor_msgs::msg::Image::SharedPtr pub_img;
         pub_img = cv_bridge::CvImage(img->header, "bgr8", frame).toImageMsg();
         this->pub_image_.publish(pub_img);
-
     }
     bboxes_ex_msgs::msg::BoundingBoxes EdgeYOLONode::objects_to_bboxes(cv::Mat frame, std::vector<edgeyolo_cpp::Object> objects, std_msgs::msg::Header header)
     {
         bboxes_ex_msgs::msg::BoundingBoxes boxes;
         boxes.header = header;
-        for(auto obj: objects){
+        for (auto obj : objects)
+        {
             bboxes_ex_msgs::msg::BoundingBox box;
             box.probability = obj.prob;
             box.class_id = edgeyolo_cpp::COCO_CLASSES[obj.label];
@@ -187,15 +196,14 @@ namespace edgeyolo_ros_cpp{
     }
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char *argv[])
 {
-  rclcpp::init(argc, argv);
-  rclcpp::NodeOptions node_options;
-  node_options.enable_topic_statistics(true);
-  rclcpp::spin(std::make_shared<edgeyolo_ros_cpp::EdgeYOLONode>(node_options));
-  rclcpp::shutdown();
-  return 0;
+    rclcpp::init(argc, argv);
+    rclcpp::NodeOptions node_options;
+    node_options.enable_topic_statistics(true);
+    rclcpp::spin(std::make_shared<edgeyolo_ros_cpp::EdgeYOLONode>(node_options));
+    rclcpp::shutdown();
+    return 0;
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(edgeyolo_ros_cpp::EdgeYOLONode)
-

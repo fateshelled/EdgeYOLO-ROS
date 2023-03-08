@@ -1,12 +1,13 @@
 #include "edgeyolo_cpp/edgeyolo_tensorrt.hpp"
 
-namespace edgeyolo_cpp{
+namespace edgeyolo_cpp
+{
 
     EdgeYOLOTensorRT::EdgeYOLOTensorRT(file_name_t path_to_engine, int device,
-                                 float nms_th, float conf_th,
-                                 int num_classes)
-    :AbcEdgeYOLO(nms_th, conf_th, num_classes),
-     DEVICE_(device)
+                                       float nms_th, float conf_th,
+                                       int num_classes)
+        : AbcEdgeYOLO(nms_th, conf_th, num_classes),
+          DEVICE_(device)
     {
         cudaSetDevice(this->DEVICE_);
         // create a model using the API directly and serialize it to a stream
@@ -14,7 +15,8 @@ namespace edgeyolo_cpp{
         size_t size{0};
 
         std::ifstream file(path_to_engine, std::ios::binary);
-        if (file.good()) {
+        if (file.good())
+        {
             file.seekg(0, file.end);
             size = file.tellg();
             file.seekg(0, file.beg);
@@ -22,7 +24,9 @@ namespace edgeyolo_cpp{
             assert(trtModelStream);
             file.read(trtModelStream, size);
             file.close();
-        }else{
+        }
+        else
+        {
             std::cerr << "invalid arguments path_to_engine: " << path_to_engine << std::endl;
             return;
         }
@@ -43,9 +47,12 @@ namespace edgeyolo_cpp{
 
         auto out_dims = this->engine_->getBindingDimensions(1);
         this->output_size_ = 1;
-        for(int j=0; j<out_dims.nbDims; ++j) {
+        for (int j = 0; j < out_dims.nbDims; ++j)
+        {
             this->output_size_ *= out_dims.d[j];
         }
+
+        this->num_array_ = this->output_size_ / (5 + this->num_classes_);
 
         // Pointers to input and output device buffers to pass to engine.
         // Engine requires exactly IEngine::getNbBindings() number of buffers.
@@ -54,21 +61,20 @@ namespace edgeyolo_cpp{
         // Note that indices are guaranteed to be less than IEngine::getNbBindings()
         assert(this->engine_->getBindingDataType(this->inputIndex_) == nvinfer1::DataType::kFLOAT);
         assert(this->engine_->getBindingDataType(this->outputIndex_) == nvinfer1::DataType::kFLOAT);
-
     }
 
-    std::vector<Object> EdgeYOLOTensorRT::inference(const cv::Mat& frame)
+    std::vector<Object> EdgeYOLOTensorRT::inference(const cv::Mat &frame)
     {
         // preprocess
         auto pr_img = static_resize(frame);
-        float* input_blob = new float[pr_img.total()*3];
+        float *input_blob = new float[pr_img.total() * 3];
         blobFromImage(pr_img, input_blob);
 
         // inference
-        float* output_blob = new float[this->output_size_];
+        float *output_blob = new float[this->output_size_];
         this->doInference(input_blob, output_blob);
 
-        float scale = std::min(this->input_w_ / (frame.cols*1.0), this->input_h_ / (frame.rows*1.0));
+        float scale = std::min(this->input_w_ / (frame.cols * 1.0), this->input_h_ / (frame.rows * 1.0));
 
         std::vector<Object> objects;
         decode_outputs(output_blob, this->num_array_, objects, this->bbox_conf_thresh_, scale, frame.cols, frame.rows);
@@ -78,11 +84,11 @@ namespace edgeyolo_cpp{
         return objects;
     }
 
-    void EdgeYOLOTensorRT::doInference(float* input, float* output)
+    void EdgeYOLOTensorRT::doInference(float *input, float *output)
     {
         // Pointers to input and output device buffers to pass to engine.
         // Engine requires exactly IEngine::getNbBindings() number of buffers.
-        void* buffers[2];
+        void *buffers[2];
 
         // Create GPU buffers on device
         CHECK(cudaMalloc(&buffers[this->inputIndex_], 3 * this->input_h_ * this->input_w_ * sizeof(float)));
@@ -105,4 +111,3 @@ namespace edgeyolo_cpp{
     }
 
 } // namespace edgeyolo_cpp
-

@@ -8,18 +8,22 @@
 #include "core.hpp"
 #include "coco_names.hpp"
 
-namespace edgeyolo_cpp{
-    namespace utils{
+namespace edgeyolo_cpp
+{
+    namespace utils
+    {
 
         static std::vector<std::string> read_class_labels_file(file_name_t file_name)
         {
             std::vector<std::string> class_names;
             std::ifstream ifs(file_name);
             std::string buff;
-            if(ifs.fail()){
+            if (ifs.fail())
+            {
                 return class_names;
             }
-            while (getline(ifs, buff)) {
+            while (getline(ifs, buff))
+            {
                 if (buff == "")
                     continue;
                 class_names.push_back(buff);
@@ -27,20 +31,23 @@ namespace edgeyolo_cpp{
             return class_names;
         }
 
-        static void draw_objects(cv::Mat bgr, const std::vector<Object>& objects, const std::vector<std::string>& class_names=COCO_CLASSES)
+        static void draw_objects(cv::Mat bgr, const std::vector<Object> &objects, const std::vector<std::string> &class_names = COCO_CLASSES)
         {
 
             for (size_t i = 0; i < objects.size(); i++)
             {
-                const Object& obj = objects[i];
+                const Object &obj = objects[i];
 
                 int color_index = obj.label % 80;
                 cv::Scalar color = cv::Scalar(color_list[color_index][0], color_list[color_index][1], color_list[color_index][2]);
                 float c_mean = cv::mean(color)[0];
                 cv::Scalar txt_color;
-                if (c_mean > 0.5){
+                if (c_mean > 0.5)
+                {
                     txt_color = cv::Scalar(0, 0, 0);
-                }else{
+                }
+                else
+                {
                     txt_color = cv::Scalar(255, 255, 255);
                 }
 

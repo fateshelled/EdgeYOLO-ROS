@@ -34,23 +34,19 @@ namespace edgeyolo_cpp
     class LogStreamConsumerBuffer : public std::stringbuf
     {
     public:
-        LogStreamConsumerBuffer(std::ostream& stream, const std::string& prefix, bool shouldLog)
-            : mOutput(stream)
-            , mPrefix(prefix)
-            , mShouldLog(shouldLog)
+        LogStreamConsumerBuffer(std::ostream &stream, const std::string &prefix, bool shouldLog)
+            : mOutput(stream), mPrefix(prefix), mShouldLog(shouldLog)
         {
         }
 
-        LogStreamConsumerBuffer(LogStreamConsumerBuffer&& other) noexcept
-            : mOutput(other.mOutput)
-            , mPrefix(other.mPrefix)
-            , mShouldLog(other.mShouldLog)
+        LogStreamConsumerBuffer(LogStreamConsumerBuffer &&other) noexcept
+            : mOutput(other.mOutput), mPrefix(other.mPrefix), mShouldLog(other.mShouldLog)
         {
         }
-        LogStreamConsumerBuffer(const LogStreamConsumerBuffer& other) = delete;
+        LogStreamConsumerBuffer(const LogStreamConsumerBuffer &other) = delete;
         LogStreamConsumerBuffer() = delete;
-        LogStreamConsumerBuffer& operator=(const LogStreamConsumerBuffer&) = delete;
-        LogStreamConsumerBuffer& operator=(LogStreamConsumerBuffer&&) = delete;
+        LogStreamConsumerBuffer &operator=(const LogStreamConsumerBuffer &) = delete;
+        LogStreamConsumerBuffer &operator=(LogStreamConsumerBuffer &&) = delete;
 
         ~LogStreamConsumerBuffer() override
         {
@@ -81,7 +77,7 @@ namespace edgeyolo_cpp
             {
                 // prepend timestamp
                 std::time_t timestamp = std::time(nullptr);
-                tm* tm_local = std::localtime(&timestamp);
+                tm *tm_local = std::localtime(&timestamp);
                 mOutput << "[";
                 mOutput << std::setw(2) << std::setfill('0') << 1 + tm_local->tm_mon << "/";
                 mOutput << std::setw(2) << std::setfill('0') << tm_local->tm_mday << "/";
@@ -105,7 +101,7 @@ namespace edgeyolo_cpp
         }
 
     private:
-        std::ostream& mOutput;
+        std::ostream &mOutput;
         std::string mPrefix;
         bool mShouldLog{};
     }; // class LogStreamConsumerBuffer
@@ -117,7 +113,7 @@ namespace edgeyolo_cpp
     class LogStreamConsumerBase
     {
     public:
-        LogStreamConsumerBase(std::ostream& stream, const std::string& prefix, bool shouldLog)
+        LogStreamConsumerBase(std::ostream &stream, const std::string &prefix, bool shouldLog)
             : mBuffer(stream, prefix, shouldLog)
         {
         }
@@ -143,25 +139,23 @@ namespace edgeyolo_cpp
         //!  Reportable severity determines if the messages are severe enough to be logged.
         //!
         LogStreamConsumer(nvinfer1::ILogger::Severity reportableSeverity, nvinfer1::ILogger::Severity severity)
-            : LogStreamConsumerBase(severityOstream(severity), severityPrefix(severity), severity <= reportableSeverity)
-            , std::ostream(&mBuffer) // links the stream buffer with the stream
-            , mShouldLog(severity <= reportableSeverity)
-            , mSeverity(severity)
+            : LogStreamConsumerBase(severityOstream(severity), severityPrefix(severity), severity <= reportableSeverity), std::ostream(&mBuffer) // links the stream buffer with the stream
+              ,
+              mShouldLog(severity <= reportableSeverity), mSeverity(severity)
         {
         }
 
-        LogStreamConsumer(LogStreamConsumer&& other) noexcept
-            : LogStreamConsumerBase(severityOstream(other.mSeverity), severityPrefix(other.mSeverity), other.mShouldLog)
-            , std::ostream(&mBuffer) // links the stream buffer with the stream
-            , mShouldLog(other.mShouldLog)
-            , mSeverity(other.mSeverity)
+        LogStreamConsumer(LogStreamConsumer &&other) noexcept
+            : LogStreamConsumerBase(severityOstream(other.mSeverity), severityPrefix(other.mSeverity), other.mShouldLog), std::ostream(&mBuffer) // links the stream buffer with the stream
+              ,
+              mShouldLog(other.mShouldLog), mSeverity(other.mSeverity)
         {
         }
-        LogStreamConsumer(const LogStreamConsumer& other) = delete;
+        LogStreamConsumer(const LogStreamConsumer &other) = delete;
         LogStreamConsumer() = delete;
         ~LogStreamConsumer() = default;
-        LogStreamConsumer& operator=(const LogStreamConsumer&) = delete;
-        LogStreamConsumer& operator=(LogStreamConsumer&&) = delete;
+        LogStreamConsumer &operator=(const LogStreamConsumer &) = delete;
+        LogStreamConsumer &operator=(LogStreamConsumer &&) = delete;
 
         void setReportableSeverity(Severity reportableSeverity)
         {
@@ -170,7 +164,7 @@ namespace edgeyolo_cpp
         }
 
     private:
-        static std::ostream& severityOstream(Severity severity)
+        static std::ostream &severityOstream(Severity severity)
         {
             return severity >= Severity::kINFO ? std::cout : std::cerr;
         }
@@ -179,12 +173,19 @@ namespace edgeyolo_cpp
         {
             switch (severity)
             {
-            case Severity::kINTERNAL_ERROR: return "[F] ";
-            case Severity::kERROR: return "[E] ";
-            case Severity::kWARNING: return "[W] ";
-            case Severity::kINFO: return "[I] ";
-            case Severity::kVERBOSE: return "[V] ";
-            default: assert(0); return "";
+            case Severity::kINTERNAL_ERROR:
+                return "[F] ";
+            case Severity::kERROR:
+                return "[E] ";
+            case Severity::kWARNING:
+                return "[W] ";
+            case Severity::kINFO:
+                return "[I] ";
+            case Severity::kVERBOSE:
+                return "[V] ";
+            default:
+                assert(0);
+                return "";
             }
         }
 
@@ -244,7 +245,7 @@ namespace edgeyolo_cpp
         //! TODO Once all samples are updated to use this method to register the logger with TensorRT,
         //! we can eliminate the inheritance of Logger from ILogger
         //!
-        nvinfer1::ILogger& getTRTLogger() noexcept
+        nvinfer1::ILogger &getTRTLogger() noexcept
         {
             return *this;
         }
@@ -255,7 +256,7 @@ namespace edgeyolo_cpp
         //! Note samples should not be calling this function directly; it will eventually go away once we eliminate the
         //! inheritance from nvinfer1::ILogger
         //!
-        void log(Severity severity, const char* msg) noexcept override
+        void log(Severity severity, const char *msg) noexcept override
         {
             LogStreamConsumer(mReportableSeverity, severity) << "[TRT] " << std::string(msg) << std::endl;
         }
@@ -280,15 +281,13 @@ namespace edgeyolo_cpp
         class TestAtom
         {
         public:
-            TestAtom(TestAtom&&) = default;
+            TestAtom(TestAtom &&) = default;
 
         private:
             friend class Logger;
 
-            TestAtom(bool started, const std::string& name, const std::string& cmdline)
-                : mStarted(started)
-                , mName(name)
-                , mCmdline(cmdline)
+            TestAtom(bool started, const std::string &name, const std::string &cmdline)
+                : mStarted(started), mName(name), mCmdline(cmdline)
             {
             }
 
@@ -308,7 +307,7 @@ namespace edgeyolo_cpp
         //
         //! \return a TestAtom that can be used in Logger::reportTest{Start,End}().
         //!
-        static TestAtom defineTest(const std::string& name, const std::string& cmdline)
+        static TestAtom defineTest(const std::string &name, const std::string &cmdline)
         {
             return TestAtom(false, name, cmdline);
         }
@@ -323,7 +322,7 @@ namespace edgeyolo_cpp
         //!
         //! \return a TestAtom that can be used in Logger::reportTest{Start,End}().
         //!
-        static TestAtom defineTest(const std::string& name, int32_t argc, char const* const* argv)
+        static TestAtom defineTest(const std::string &name, int32_t argc, char const *const *argv)
         {
             // Append TensorRT version as info
             const std::string vname = name + " [TensorRT v" + std::to_string(NV_TENSORRT_VERSION) + "]";
@@ -338,7 +337,7 @@ namespace edgeyolo_cpp
         //!
         //! \param[in] testAtom The handle to the test that has started
         //!
-        static void reportTestStart(TestAtom& testAtom)
+        static void reportTestStart(TestAtom &testAtom)
         {
             reportTestResult(testAtom, TestResult::kRUNNING);
             assert(!testAtom.mStarted);
@@ -354,32 +353,32 @@ namespace edgeyolo_cpp
         //! \param[in] result The result of the test. Should be one of TestResult::kPASSED,
         //!                   TestResult::kFAILED, TestResult::kWAIVED
         //!
-        static void reportTestEnd(TestAtom const& testAtom, TestResult result)
+        static void reportTestEnd(TestAtom const &testAtom, TestResult result)
         {
             assert(result != TestResult::kRUNNING);
             assert(testAtom.mStarted);
             reportTestResult(testAtom, result);
         }
 
-        static int32_t reportPass(TestAtom const& testAtom)
+        static int32_t reportPass(TestAtom const &testAtom)
         {
             reportTestEnd(testAtom, TestResult::kPASSED);
             return EXIT_SUCCESS;
         }
 
-        static int32_t reportFail(TestAtom const& testAtom)
+        static int32_t reportFail(TestAtom const &testAtom)
         {
             reportTestEnd(testAtom, TestResult::kFAILED);
             return EXIT_FAILURE;
         }
 
-        static int32_t reportWaive(TestAtom const& testAtom)
+        static int32_t reportWaive(TestAtom const &testAtom)
         {
             reportTestEnd(testAtom, TestResult::kWAIVED);
             return EXIT_SUCCESS;
         }
 
-        static int32_t reportTest(TestAtom const& testAtom, bool pass)
+        static int32_t reportTest(TestAtom const &testAtom, bool pass)
         {
             return pass ? reportPass(testAtom) : reportFail(testAtom);
         }
@@ -393,38 +392,51 @@ namespace edgeyolo_cpp
         //!
         //! \brief returns an appropriate string for prefixing a log message with the given severity
         //!
-        static const char* severityPrefix(Severity severity)
+        static const char *severityPrefix(Severity severity)
         {
             switch (severity)
             {
-            case Severity::kINTERNAL_ERROR: return "[F] ";
-            case Severity::kERROR: return "[E] ";
-            case Severity::kWARNING: return "[W] ";
-            case Severity::kINFO: return "[I] ";
-            case Severity::kVERBOSE: return "[V] ";
-            default: assert(0); return "";
+            case Severity::kINTERNAL_ERROR:
+                return "[F] ";
+            case Severity::kERROR:
+                return "[E] ";
+            case Severity::kWARNING:
+                return "[W] ";
+            case Severity::kINFO:
+                return "[I] ";
+            case Severity::kVERBOSE:
+                return "[V] ";
+            default:
+                assert(0);
+                return "";
             }
         }
 
         //!
         //! \brief returns an appropriate string for prefixing a test result message with the given result
         //!
-        static const char* testResultString(TestResult result)
+        static const char *testResultString(TestResult result)
         {
             switch (result)
             {
-            case TestResult::kRUNNING: return "RUNNING";
-            case TestResult::kPASSED: return "PASSED";
-            case TestResult::kFAILED: return "FAILED";
-            case TestResult::kWAIVED: return "WAIVED";
-            default: assert(0); return "";
+            case TestResult::kRUNNING:
+                return "RUNNING";
+            case TestResult::kPASSED:
+                return "PASSED";
+            case TestResult::kFAILED:
+                return "FAILED";
+            case TestResult::kWAIVED:
+                return "WAIVED";
+            default:
+                assert(0);
+                return "";
             }
         }
 
         //!
         //! \brief returns an appropriate output stream (cout or cerr) to use with the given severity
         //!
-        static std::ostream& severityOstream(Severity severity)
+        static std::ostream &severityOstream(Severity severity)
         {
             return severity >= Severity::kINFO ? std::cout : std::cerr;
         }
@@ -432,16 +444,16 @@ namespace edgeyolo_cpp
         //!
         //! \brief method that implements logging test results
         //!
-        static void reportTestResult(TestAtom const& testAtom, TestResult result)
+        static void reportTestResult(TestAtom const &testAtom, TestResult result)
         {
             severityOstream(Severity::kINFO) << "&&&& " << testResultString(result) << " " << testAtom.mName << " # "
-                                            << testAtom.mCmdline << std::endl;
+                                             << testAtom.mCmdline << std::endl;
         }
 
         //!
         //! \brief generate a command line string from the given (argc, argv) values
         //!
-        static std::string genCmdlineString(int32_t argc, char const* const* argv)
+        static std::string genCmdlineString(int32_t argc, char const *const *argv)
         {
             std::stringstream ss;
             for (int32_t i = 0; i < argc; i++)
@@ -470,7 +482,7 @@ namespace
     //!
     //!     LOG_VERBOSE(logger) << "hello world" << std::endl;
     //!
-    inline LogStreamConsumer LOG_VERBOSE(const Logger& logger)
+    inline LogStreamConsumer LOG_VERBOSE(const Logger &logger)
     {
         return LogStreamConsumer(logger.getReportableSeverity(), Severity::kVERBOSE);
     }
@@ -482,7 +494,7 @@ namespace
     //!
     //!     LOG_INFO(logger) << "hello world" << std::endl;
     //!
-    inline LogStreamConsumer LOG_INFO(const Logger& logger)
+    inline LogStreamConsumer LOG_INFO(const Logger &logger)
     {
         return LogStreamConsumer(logger.getReportableSeverity(), Severity::kINFO);
     }
@@ -494,7 +506,7 @@ namespace
     //!
     //!     LOG_WARN(logger) << "hello world" << std::endl;
     //!
-    inline LogStreamConsumer LOG_WARN(const Logger& logger)
+    inline LogStreamConsumer LOG_WARN(const Logger &logger)
     {
         return LogStreamConsumer(logger.getReportableSeverity(), Severity::kWARNING);
     }
@@ -506,7 +518,7 @@ namespace
     //!
     //!     LOG_ERROR(logger) << "hello world" << std::endl;
     //!
-    inline LogStreamConsumer LOG_ERROR(const Logger& logger)
+    inline LogStreamConsumer LOG_ERROR(const Logger &logger)
     {
         return LogStreamConsumer(logger.getReportableSeverity(), Severity::kERROR);
     }
@@ -519,7 +531,7 @@ namespace
     //!
     //!     LOG_FATAL(logger) << "hello world" << std::endl;
     //!
-    inline LogStreamConsumer LOG_FATAL(const Logger& logger)
+    inline LogStreamConsumer LOG_FATAL(const Logger &logger)
     {
         return LogStreamConsumer(logger.getReportableSeverity(), Severity::kINTERNAL_ERROR);
     }

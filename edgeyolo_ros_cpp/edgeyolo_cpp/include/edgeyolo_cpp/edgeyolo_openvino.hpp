@@ -12,21 +12,23 @@
 #include "core.hpp"
 #include "coco_names.hpp"
 
-namespace edgeyolo_cpp{
-    class EdgeYOLOOpenVINO: public AbcEdgeYOLO{
-        public:
-            EdgeYOLOOpenVINO(file_name_t path_to_model, std::string device_name,
-                          float nms_th=0.45, float conf_th=0.3,
-                          int num_classes=80);
-            std::vector<Object> inference(const cv::Mat& frame) override;
+namespace edgeyolo_cpp
+{
+    class EdgeYOLOOpenVINO : public AbcEdgeYOLO
+    {
+    public:
+        EdgeYOLOOpenVINO(file_name_t path_to_model, std::string device_name,
+                         float nms_th = 0.45, float conf_th = 0.3,
+                         int num_classes = 80);
+        std::vector<Object> inference(const cv::Mat &frame) override;
 
-        private:
-            std::string device_name_;
-            std::string input_name_;
-            std::string output_name_;
-            InferenceEngine::CNNNetwork network_;
-            InferenceEngine::ExecutableNetwork executable_network_;
-            InferenceEngine::InferRequest infer_request_;
+    private:
+        std::string device_name_;
+        std::string input_name_;
+        std::string output_name_;
+        InferenceEngine::CNNNetwork network_;
+        InferenceEngine::ExecutableNetwork executable_network_;
+        InferenceEngine::InferRequest infer_request_;
     };
 }
 
