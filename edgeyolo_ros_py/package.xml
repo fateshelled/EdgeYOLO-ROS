@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>edgeyolo_ros_py</name>
+  <version>0.0.1</version>
+  <description>The edgeyolo_ros_py package</description>
+  <maintainer email="53618876+fateshelled@users.noreply.github.com">fateshelled</maintainer>
+  <license>Apache-2.0 License</license>
+  <author email="53618876+fateshelled@users.noreply.github.com">fateshelled</author>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <exec_depend>rclpy</exec_depend>
+  <depend>bbox_ex_msgs</depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
